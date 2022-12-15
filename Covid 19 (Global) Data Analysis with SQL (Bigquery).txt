@@ -1,0 +1,139 @@
+-- overiew of the data
+select *
+from `Covid19.Covid Death`
+
+select*
+from `Covid19.Covid Vaccination`
+
+-- Starting with Covid Deaths Data
+-- Select data that we are going to use
+select location, 
+date, 
+total_cases, 
+new_cases, 
+total_deaths, 
+population
+from `Covid19.Covid Death`
+
+-- Looking at Total Cases vs Total Deaths
+select location, 
+date, 
+total_cases, 
+total_deaths, 
+(total_deaths/total_cases)*100 as DeathPercentage
+from `Covid19.Covid Death`
+order by 1,2
+
+-- Looking at Total Cases vs Total Deaths in Malaysia
+select location, 
+date, 
+total_cases, 
+total_deaths, 
+(total_deaths/total_cases)*100 as DeathPercentage
+from `Covid19.Covid Death`
+where location = 'Malaysia'
+
+-- Looking at Total Cases vs Population
+-- Shows what percentage of population got covid
+select location, 
+date, 
+population, 
+total_cases, 
+(total_cases/population)*100 as PercentPopulationInfected
+from `Covid19.Covid Death`
+
+-- Looking at Total Cases vs Population in Malaysia
+-- Shows what percentage of population got covid in Malaysia
+select location, 
+date, 
+population, 
+total_cases, 
+(total_cases/population)*100 as PercentPopulationInfected
+from `Covid19.Covid Death`
+where location = 'Malaysia'
+
+-- Looking at Countries with Highest Infection Rate vs Population
+select location, 
+population,
+max(total_cases), 
+max(total_cases/population)*100 as PercentPopulationInfected
+from `Covid19.Covid Death`
+group by location, population
+order by PercentPopulationInfected desc
+
+-- Looking for Countries with Highest Death Count per Population
+
+select location, 
+max(total_deaths) as TotalDeathCount
+from `Covid19.Covid Death`
+where continent is not null
+group by location, population
+order by TotalDeathCount desc
+
+-- Showing Continent with the Highest Death Count per Population
+select continent, 
+max(total_deaths) as TotalDeathCount
+from `Covid19.Covid Death`
+where continent is not null
+group by continent
+order by TotalDeathCount desc
+
+-- Global Numbers
+
+select date, 
+sum(new_cases) as TotalCases,
+sum(new_deaths) as TotalDeaths, 
+sum(new_deaths)/sum(new_cases)*100 as DeathPercentage
+from `Covid19.Covid Death`
+where continent is not null
+group by date
+
+select sum(new_cases) as TotalCases,
+sum(new_deaths) as TotalDeaths, 
+sum(new_deaths)/sum(new_cases)*100 as DeathPercentage
+from `Covid19.Covid Death`
+where continent is not null
+
+-- Covid Vaccination Table
+-- Query about vaccination data in Malaysia 
+select location, 
+total_vaccinations, 
+people_vaccinated, 
+people_fully_vaccinated, 
+total_boosters 
+from `Covid19.Covid Vaccination`
+where location = 'Malaysia'
+
+-- Joining Covid Death Table with Covid vaccination Table
+select*
+from `Covid19.Covid Death` as dea join `Covid19.Covid Vaccination` as vac
+on dea.location = vac.location and dea.date = vac.date
+
+-- Looking at Total population vs Vaccination
+select dea.continent, 
+dea.location, 
+dea.date, 
+dea.population, 
+vac.new_vaccinations
+from `Covid19.Covid Death` as dea join `Covid19.Covid Vaccination` as vac
+on dea.location = vac.location and dea.date = vac.date
+where dea.continent is not null
+order by 2,3
+
+-- Looking at Rolling people Vaccinated
+select dea.continent, 
+dea.location, 
+dea.date, 
+dea.population, 
+vac.new_vaccinations,
+sum(vac.new_vaccinations) over (partition by dea.location order by dea.location, dea.date) as RollingPeopleVaccinated
+from `Covid19.Covid Death` as dea join `Covid19.Covid Vaccination` as vac
+on dea.location = vac.location and dea.date = vac.date
+where dea.continent is not null
+order by 2,3
+
+-- Using bigquery to create new table (Rolling People Vaccinated)
+-- Using New table to get Rolling people Vaccinated per Population
+select*, (RollingpeopleVaccinated/population)*100
+from `Covid19.Rolling People Vaccinated`
+
