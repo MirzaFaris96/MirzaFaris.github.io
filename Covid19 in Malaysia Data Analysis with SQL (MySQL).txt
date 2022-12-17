@@ -1,0 +1,201 @@
+-- The data is from https://github.com/MoH-Malaysia/covid19-public
+-- All data is until 13/12/2022
+
+-- Analyze Covid Cases in Malaysia
+
+--Overview all data
+select *
+from covid19.`covid cases_malaysia`
+
+-- Find total cases 
+select sum(cases_new) as TotalCases
+from covid19.`covid cases_malaysia`
+ -- Total covid case in Malaysia  = 5,012,483
+ 
+ -- Find total import cases
+select sum(cases_import) as TotalCasesImport
+from covid19.`covid cases_malaysia`
+-- Total covid case import in Malaysia = 38,479
+
+-- Find total cases recovered
+select sum(cases_recovered) as TotalCasesRecovered
+from covid19.`covid cases_malaysia`
+-- Total covid case recovered in Malaysia = 4,958,158
+
+-- Find the latest new cases, import cases, recovered cases and active cases
+select cases_new, cases_import, cases_recovered, cases_active
+from covid19.`covid cases_malaysia`
+where date = '2022-12-13'
+-- new cases = 1,040  import cases = 2  recovered cases = 1456 and active cases = 17,547
+
+-- Find total new cases, total import cases and total recovered cases in 2022
+select sum(cases_new) as TotalCases, sum(cases_import) as TotalCaseImport, 
+sum(cases_recovered) as TotalCaseRecovered 
+from covid19.`covid cases_malaysia`
+where date between '2022-01-01' and '2022-12-13' 
+-- Total new cases = 2,254,397	 Total import cases = 30,178	Total recovered cases = 2,272,780
+
+-- Find the total number of cases by periods of development
+select sum(cases_child) as Totalchild, sum(cases_adolescent) as TotalAdolescent, 
+sum(cases_adult) as TotalAdult, sum(cases_elderly) as TotalElderly
+from covid19.`covid cases_malaysia`
+-- Child = 631,873	Adolescent = 316,438	Adult = 3,516,534	Elderly = 462,606
+
+-- Find the total case for youngest and oldest age group
+select sum(cases_0_4) as TotalYoungest, sum(cases_80) as TotalOldest
+from covid19.`covid cases_malaysia`
+-- Youngest Total case = 256,914	Oldest Total Case = 53021
+
+
+-- Analyze Covid Cluster in Malaysia
+
+-- Find which cluster are in import category
+SELECT cluster 
+FROM covid19.`covid clusters malaysia`
+where category = 'import'
+
+-- Find the cluster which have the higest cases
+SELECT cluster, cases_total
+FROM covid19.`covid clusters malaysia`
+order by cases_total desc
+-- answer: Kluster Teratai
+
+-- find which community cluster have the lowest cases
+SELECT cluster, cases_total
+FROM covid19.`covid clusters malaysia`
+where category = 'community'
+order by cases_total
+-- Answer: Kluster Ara & Kluster Jalan Utara
+
+-- Analyze Covid Deaths in Malaysia
+
+-- Find the total death and total death unvaccine
+SELECT sum(deaths_new) as TotalDeaths, sum(deaths_unvax) as TotalDeathsUnvax
+FROM covid19.`covid deaths_malaysia`;
+-- Total Deaths = 36,778  Total Deaths Unvaccine =22,403
+
+-- Calculate percentage of total death unvaccined per total death
+SELECT  sum(deaths_new) as TotalDeaths, sum(deaths_unvax) as TotalDeathsUnvax
+FROM covid19.`covid deaths_malaysia`;
+select (sum(deaths_unvax) / (sum(deaths_unvax) + sum(deaths_new)) * 100) as PercentageDeathsUnvax
+FROM covid19.`covid deaths_malaysia`;
+-- Answer: 37.86%
+
+-- Analyze Covid Test in Malaysia
+
+-- Total RTK Test done
+
+alter table covid19.`covid tests_malaysia` change column
+`rtk-ag` `rtk_ag`
+varchar(255);
+SELECT sum(rtk_ag) as TotalRtkTest
+FROM covid19.`covid tests_malaysia`
+-- Answer: 42,242,160
+
+-- Total PCR Test done
+alter table covid19.`covid tests_malaysia` change column
+`rtk-ag` `rtk_ag`
+varchar(255);
+
+SELECT sum(pcr) as TotalPCRTest 
+FROM covid19.`covid tests_malaysia`
+-- Answer: 24,485,495
+
+-- Calculate RTK & PCR test percentage respectively
+alter table covid19.`covid tests_malaysia` change column
+`rtk-ag` `rtk_ag`
+varchar(255);
+
+SELECT sum(rtk_ag) as TotalRtkTest, sum(pcr) as TotalPCRTest 
+FROM covid19.`covid tests_malaysia`;
+
+SELECT (sum(rtk_ag) / (sum(rtk_ag) + sum(pcr)) * 100) as PercentageRtkTest,
+(sum(pcr) / (sum(rtk_ag) + sum(pcr)) * 100) as PercentagePcr
+FROM covid19.`covid tests_malaysia`;
+-- RTK = 63.3%  PCR = 36.7%
+
+-- Analyze Covid Vaccination in Malaysia
+
+-- Overview the data
+SELECT * 
+FROM covid19.`covid vax_malaysia`
+order by date;
+
+-- Find the total for those who took Pfizer, Sinovac, Astra & Sinopharm as first dose respectively
+SELECT sum(pfizer1), sum(sinovac1), sum(astra1), sum(sinopharm1)
+FROM covid19.`covid vax_malaysia`;
+-- Pfizer = 15,624,399  Sinovac =  10,198,213  Astra =  2,047,926  Sinopharm =  18,231
+
+-- Find the cumulative value for those who are fully vaccinated and those who had got their 1st booster until 13/12/2022
+SELECT cumul_full, cumul_booster
+FROM covid19.`covid vax_malaysia`
+where date = '2022-12-13'
+-- Fully Vaccinated = 27,528,717  1st Booster =  16,272,116
+
+-- Find total vaccine that have been administered by brand
+SELECT sum(pfizer1 + pfizer2 + pfizer3 + pfizer4) as TotalPfizer, 
+sum(sinovac1 + sinovac2 + sinovac3 + sinovac3 + sinovac4) as TotalSinovac, 
+sum(astra1 + astra2 + astra3 + astra4) as TotalAstra, 
+sum(sinopharm1 + sinopharm2 + sinopharm3 + sinopharm4) as TotalSinopharm,
+sum(cansino + cansino3 + cansino4) as TotalCansino
+FROM covid19.`covid vax_malaysia`;
+-- Pfizer = 44,761,890  Sinovac = 22,795,961  Astra = 5,707,311  Sinopharm = 44,175  Cansino = 226,494
+
+-- Calculate Percent of Total Child and Total Adolescent that have full vaccine 
+select (cumul_full_child / cumul_full) * 100 as PercentageChildVax, 
+(cumul_full_adol / cumul_full) * 100 as PercentageAdolVax
+FROM covid19.`covid vax_malaysia`
+where date = '2022-12-13';
+-- Child = 5.6%  Adolescent = 10.4%
+
+-- Make a new column in Covid Cases, Cocid Deaths and Covid Vaccination Table
+
+-- create cumulative column for Covid Cases
+select c1.date, c1.cases_new, (select sum(c2.cases_new) 
+from covid19.`covid cases_malaysia` as c2
+where c2.date <= c1.date) as cumulative_cases
+from covid19.`covid cases_malaysia` as c1
+order by c1.date;
+
+-- create cumulative column for Covid Deaths
+select c1.date, c1.deaths_new, (select sum(c2.deaths_new) 
+from covid19.`covid deaths_malaysia` as c2
+where c2.date <= c1.date) as cumulative_deaths
+from covid19.`covid deaths_malaysia` as c1
+order by c1.date;
+
+-- create cumulative column for covid vaccination
+select c1.date, c1.daily_full, (select sum(c2.daily_full) 
+from covid19.`covid vax_malaysia` as c2
+where c2.date <= c1.date) as cumulative_vaccinated
+from covid19.`covid vax_malaysia` as c1
+order by c1.date;
+
+-- Joining Tables
+
+-- Query to get overview of total cases, total deaths and total fully vaccinated
+select c.date, c.cases_new, d.deaths_new, v.daily_full
+FROM covid19.`covid cases_malaysia` as c
+join covid19.`covid deaths_malaysia` as d
+on c.date = d.date
+join covid19.`covid vax_malaysia` as v
+on c.date = v.date
+order by c.date;
+-- Since I use Join, the date start from 24/2/2021 which is the start of the common dates between 3 tables.
+
+-- Find the cumulative cases, deaths and fully vaccinated between 24/2/2021 until 13/12/2022
+select sum(c.cases_new), sum(d.deaths_new), sum(v.daily_full)
+FROM covid19.`covid cases_malaysia` as c
+join covid19.`covid deaths_malaysia` as d
+on c.date = d.date
+join covid19.`covid vax_malaysia` as v
+on c.date = v.date;
+-- Total Cases = 4,724,254  Total deaths = 35,697  Total Fully Vaccinated = 27,528,717
+
+
+
+
+
+
+
+
